@@ -551,7 +551,7 @@ public class HamsterSession {
      *                no outdated request resolves the current one
      * @param result the result of the input request, might be null
      * @throws IllegalStateException if this session isn't alive, no input is requested
-     *                               or if inputId does not mach the current request
+     *                               or if inputId does not match the current request
      */
     public void setInputResult(final int inputId, final String result) {
         this.readWriteLock.readLock().lock();
@@ -562,6 +562,33 @@ public class HamsterSession {
                     "inputId does not match current input request");
 
             sendOperation(new SetInputOperation(inputId, result));
+        } finally {
+            this.readWriteLock.readLock().unlock();
+        }
+    }
+
+    /*@
+     @ requires isAlive();
+     @ requires (this.inputMessage != null) && (this.inputMessage.getInputId() == inputId);
+     @*/
+    /**
+     * Aborts the current input request
+     * This does not have an immediate effect because it is sent to
+     * the client.
+     * @param inputId the id of the input request which should be aborted, used to check that
+     *                no outdated request aborts the current one
+     * @throws IllegalStateException if this session isn't alive, no input is requested
+     *                               or if inputId does not match the current request
+     */
+    public void abortInput(final int inputId) {
+        this.readWriteLock.readLock().lock();
+        try {
+            checkState(isAlive(), "session must not be stopped");
+            checkState(this.inputMessage != null, "no input requested");
+            checkState(this.inputMessage.getInputId() == inputId,
+                    "inputId does not match current input request");
+
+            sendOperation(new SetInputOperation(inputId, null));
         } finally {
             this.readWriteLock.readLock().unlock();
         }
