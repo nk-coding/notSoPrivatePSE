@@ -173,6 +173,7 @@ public class HamsTTPServer {
         handler.get("/state", this::getState);
         handler.get("/gamesList", this::getGamesList);
         handler.post("/input", this::postInput);
+        handler.post("/abortInput", this::postAbortInput);
         handler.post("/speed", this::postSpeed);
         handler.post("/action", this::postAction);
 
@@ -256,6 +257,26 @@ public class HamsTTPServer {
         }
 
         session.setInputResult(inputId, input);
+    }
+
+    /*@
+     @ requires context != null;
+     @*/
+    /**
+     * Handles the abort input HTTP POST request
+     * @param context the request context
+     */
+    private void postAbortInput(final RequestContext context) {
+        checkNotNull(context);
+
+        final HamsterSession session = getSession(context);
+        final int inputId = getIntQueryParam(context, "inputId");
+        final Optional<InputMessage> inputMessage = session.getInputMessage();
+        if (inputMessage.isEmpty() || (inputId != inputMessage.get().getInputId())) {
+            throw new StatusCodeException(400, "outdated inputId");
+        }
+
+        session.abortInput(inputId);
     }
 
     /*@
