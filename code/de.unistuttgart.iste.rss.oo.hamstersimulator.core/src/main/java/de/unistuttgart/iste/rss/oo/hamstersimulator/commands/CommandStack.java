@@ -158,6 +158,10 @@ public abstract class CommandStack {
         return this.canRedo.getReadOnlyProperty();
     }
 
+    /**
+     * Gets a lock used to synchronize all state (mode, canUndo, canRedo) related methods
+     * @return the lock (always the same instance)
+     */
     protected Lock getStateLock() {
         return this.stateLock;
     }
